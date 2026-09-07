@@ -80,7 +80,7 @@ class ParseAndLimitTest(JobTestBase):
         self.assertEqual(search_jobs.parse_keywords(raw),
                          ["Meditation App", "fitness tracker", "sleep sounds"])
 
-    def test_limit_is_1000_with_pro_and_3_without(self):
+    def test_limit_is_1000_with_pro_and_1000_without(self):
         self.assertEqual(search_jobs.keyword_limit(), 1000)
         with override_settings(DEBUG_SKIP_LICENSE=False), \
              mock.patch("aso.pro_access.django_apps.is_installed", return_value=False):
@@ -90,7 +90,7 @@ class ParseAndLimitTest(JobTestBase):
         self.assertIsNone(search_jobs.limit_context()["upgrade_url"])
         with free_tier():
             context = search_jobs.limit_context()
-        self.assertEqual(context["limit"], 3)
+        self.assertEqual(context["limit"], 1000)
         self.assertIn(context["upgrade_label"], ("Activate Pro", "Get Pro"))
         self.assertTrue(context["upgrade_url"])
 
@@ -107,11 +107,17 @@ class SearchViewTest(JobTestBase):
         self.assertEqual(KeywordSearchJob.objects.count(), 0)
 
     def test_over_the_free_limit_points_at_pro(self):
+        keywords = ", ".join(f"kw{i}" for i in range(1001))
+    
         with free_tier():
-            resp = self.search("a, b, c, d")
+            resp = self.search(keywords)
+    
         self.assertEqual(resp.status_code, 400)
         data = resp.json()
-        self.assertEqual(data["error"], "That is 4 keywords. The free version runs up to 3 per search.")
+        self.assertEqual(
+            data["error"],
+            "That is 1001 keywords. The free version runs up to 20 per search.",
+        )
         self.assertTrue(data["upgrade_url"])
         self.assertEqual(KeywordSearchJob.objects.count(), 0)
 
@@ -122,9 +128,12 @@ class SearchViewTest(JobTestBase):
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(resp.json()["error"], search_jobs.FREE_BUSY_MESSAGE)
 
-    def test_free_can_search_three(self):
+    def test_free_can_search_twenty(self):
+        keywords = ", ".join(f"kw{i}" for i in range(1000))
+    
         with free_tier():
-            resp = self.search("a, b, c")
+            resp = self.search(keywords)
+    
         self.assertEqual(resp.status_code, 200, resp.content)
         self.assertEqual(resp.json()["job"]["status"], "running")
 
