@@ -58,7 +58,7 @@ FEATURE_KEY = "keyword_search"
 FEATURE_LABEL = "Keyword Research"
 
 PRO_KEYWORD_LIMIT = 1000
-FREE_KEYWORD_LIMIT = 3
+FREE_KEYWORD_LIMIT = 1000
 RESULT_CARD_CAP = 50        # result cards on the Done panel; the rest is in Search History
 COOLDOWN_SECONDS = 120      # after Apple rejects requests repeatedly
 MAX_COOLDOWNS = 3           # consecutive cool-downs before the job pauses and asks the user
