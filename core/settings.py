@@ -37,10 +37,12 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "") or "django-insecure-dev-key-change
 DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "0.0.0.0",
-    "respectaso.private",
+    host.strip()
+    for host in os.environ.get(
+        "ALLOWED_HOSTS",
+        "localhost,127.0.0.1,0.0.0.0,respectaso.private",
+    ).split(",")
+    if host.strip()
 ]
 
 INSTALLED_APPS = [
@@ -109,13 +111,22 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # CSRF trusted origins for local access
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://respectaso.private",
-    "http://localhost:9090",
-    "http://127.0.0.1:9090",
-    "http://respectaso.private:9090",
+    origin.strip()
+    for origin in os.environ.get(
+        "CSRF_TRUSTED_ORIGINS",
+        (
+            "http://localhost,"
+            "http://127.0.0.1,"
+            "http://respectaso.private,"
+            "http://localhost:9090,"
+            "http://127.0.0.1:9090,"
+            "http://respectaso.private:9090"
+        ),
+    ).split(",")
+    if origin.strip()
 ]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Native app: allow any localhost port (Gunicorn binds to a random port)
 if IS_NATIVE_APP:
